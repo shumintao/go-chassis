@@ -3,6 +3,7 @@ package handler
 import (
 	"fmt"
 	"strings"
+	"sync"
 
 	"github.com/go-chassis/go-chassis/v2/core/common"
 	"github.com/go-chassis/go-chassis/v2/core/invocation"
@@ -17,6 +18,7 @@ type Chain struct {
 	ServiceType string
 	Name        string
 	Handlers    []Handler
+	lock        sync.Locker
 }
 
 func (c *Chain) Clone() Chain {
@@ -39,6 +41,8 @@ func (c *Chain) AddHandler(h Handler) {
 
 // Next is for to handle next handler in the chain
 func (c *Chain) Next(i *invocation.Invocation, f invocation.ResponseCallBack) {
+	c.lock.Lock()
+	defer c.lock.Unlock()
 	index := i.HandlerIndex
 	if index >= len(c.Handlers) {
 		r := &invocation.Response{
@@ -118,7 +122,7 @@ func CreateChain(serviceType string, chainName string, handlerNames ...string) (
 
 // addHandler add handler
 func addHandler(c *Chain, name string) error {
-	handler, err := CreateHandler(name)
+	handler, err := CreateHalsndler(name)
 	if err != nil {
 		return err
 	}
